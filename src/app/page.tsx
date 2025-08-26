@@ -62,13 +62,13 @@ const canSizeSpecs: Record<CanSize, CanSizeSpec> = {
   "355ml": {
     scale: [2.5, 2.5, 2.5],
     // 지름 66mm → 둘레 ≈ 207mm, 라벨 높이 약 110mm
-    labelSizeText: "Label 207×110 mm",
+    labelSizeText: "Label 414×220 mm",
   },
   // 475ml: 동일 지름, 더 긴 높이 위주로 스케일
   "475ml": {
     scale: [2.6, 3.0, 2.6],
     // 지름 동일 → 둘레 ≈ 207mm, 라벨 높이 약 140mm
-    labelSizeText: "Label 207×140 mm",
+    labelSizeText: "Label 414×280 mm",
   },
 };
 
@@ -375,7 +375,10 @@ function CustomOrbitControls({ controlsRef }: { controlsRef: React.RefObject<any
 // }
 
 export default function Page() {
-  const [selectedFlavor] = useState<keyof typeof flavorTextures>("blackCherry");
+  // GitHub Pages 호환을 위해 쓰던 BASE를 클라이언트에서도 사용
+  const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+  const [selectedFlavor, setSelectedFlavor] = useState<"none" | keyof typeof flavorTextures>("none");
   const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [customImage, setCustomImage] = useState<string>("");
   const [isAutoRotating, setIsAutoRotating] = useState(false);
@@ -476,6 +479,7 @@ export default function Page() {
     });
     controlsRef.current?.reset();
     setCameraFov(20);
+    setSelectedFlavor("none");
   };
 
   const toggleAutoRotation = () => setIsAutoRotating((v) => !v);
@@ -1191,16 +1195,29 @@ export default function Page() {
             <SceneExposure exposure={lightingSettings.exposure} />
             <CameraPerspective fov={cameraFov} />
             <CustomLighting settings={lightingSettings} />
-            <EditableSodaCan
-              customTexture={customImage || flavorTextures[selectedFlavor]}
-              rotation={rotation}
-              isAutoRotating={isAutoRotating}
-              isRecording={isRecording}
-              recordingProgress={recordingProgress}
-              canSize={canSize}
-              labelRoughness={labelRoughness}
-              metalSettings={metalSettings}
-            />
+            {
+              /* 적용할 라벨 텍스처 계산 */
+              (() => {
+                const selectedTexture =
+                  selectedFlavor === "none" ? undefined : flavorTextures[selectedFlavor];
+                const defaultBySize =
+                  canSize === "475ml"
+                    ? `${BASE}/labels/475d.png`
+                    : `${BASE}/labels/355d.png`;
+                const appliedTexture = customImage || selectedTexture || defaultBySize;
+                return (
+                  <EditableSodaCan
+                    customTexture={appliedTexture}
+                    rotation={rotation}
+                    isAutoRotating={isAutoRotating}
+                    isRecording={isRecording}
+                    recordingProgress={recordingProgress}
+                    canSize={canSize}
+                    labelRoughness={labelRoughness}
+                    metalSettings={metalSettings}
+                  />
+                );
+              })()}
             <CustomOrbitControls controlsRef={controlsRef} />
             <RotatingEnvironment
               barRotation={bar.rotation}
