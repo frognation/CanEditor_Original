@@ -8,6 +8,10 @@ import * as THREE from "three";
 
 useGLTF.preload("/Soda-can.gltf");
 
+// GitHub Pages 호환을 위해 쓰던 BASE를 클라이언트에서도 사용
+// Vercel/Pages 겸용 베이스 경로
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 // 캔 사이즈 타입(위에서 먼저 선언)
 type CanSize = "355ml" | "475ml";
 interface CanSizeSpec {
@@ -92,7 +96,12 @@ function EditableSodaCan({
   metalSettings: MetalSettings;
 }) {
   const { nodes } = useGLTF("/Soda-can.gltf");
-  const texture = useTexture(customTexture || flavorTextures.blackCherry);
+
+  // 사이즈별 기본 라벨(업로드/맛 선택이 없을 때)
+  const defaultBySize =
+    canSize === "475ml" ? `${BASE}/labels/475d.png` : `${BASE}/labels/355d.png`;
+  const texture = useTexture(customTexture || defaultBySize);
+
   texture.flipY = false;
 
   const groupRef = useRef<THREE.Group>(null);
@@ -375,10 +384,8 @@ function CustomOrbitControls({ controlsRef }: { controlsRef: React.RefObject<any
 // }
 
 export default function Page() {
-  // GitHub Pages 호환을 위해 쓰던 BASE를 클라이언트에서도 사용
-  const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
-  const [selectedFlavor, setSelectedFlavor] = useState<"none" | keyof typeof flavorTextures>("none");
+  const [selectedFlavor, setSelectedFlavor] =
+    useState<"none" | keyof typeof flavorTextures>("none");
   const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [customImage, setCustomImage] = useState<string>("");
   const [isAutoRotating, setIsAutoRotating] = useState(false);
