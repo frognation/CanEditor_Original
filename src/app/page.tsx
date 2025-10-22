@@ -392,35 +392,35 @@ export default function Page() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [canSize, setCanSize] = useState<CanSize>("355ml");
-  const [labelRoughness, setLabelRoughness] = useState<number>(0.26);
+  const [labelRoughness, setLabelRoughness] = useState<number>(0.21);
   const [metalSettings, setMetalSettings] = useState<MetalSettings>({
-    top: { color: "#ffffff", brightness: 1.35, roughness: 0.48, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.40 },
-    bottom: { color: "#ffffff", brightness: 1.40, roughness: 0.46, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.50 },
+    top: { color: "#c7c7c7", brightness: 1.35, roughness: 0.48, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.40 },
+    bottom: { color: "#b8b8b8", brightness: 1.40, roughness: 0.46, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.50 },
   });
   const [lightingSettings, setLightingSettings] = useState<LightingSettings>({
-    exposure: 1.78,
-    envIntensity: 1.54,                // (bar 비활성 시) HDRI 강도
-    ambientIntensity: 2.8,
-    fillLightIntensity: 5.0,
+    exposure: 1.43,
+    envIntensity: 2.32,                // (bar 비활성 시) HDRI 강도
+    ambientIntensity: 2.7,
+    fillLightIntensity: 4.3,
     fillLightPosition: [5, 0, 5],
-    rimLightIntensity: 5.8,
+    rimLightIntensity: 5.6,
     rimLightPosition: [-5, 0, 5],
-    directionalIntensity: 2.6,
-    directionalPosition: [10, 10, 10],
-    otherRotation: (195 * Math.PI) / 180, // 195°
-    otherStrength: 1.01,
+    directionalIntensity: 4.2,
+    directionalPosition: [1000, 500, 500],
+    otherRotation: (130 * Math.PI) / 180, // 130°
+    otherStrength: 1.61,
   });
   const [bar, setBar] = useState<BarSettings>({
     enabled: true,
     color: "#fafafa",
     intensity: 1.10,
-    width: 4.6,
-    height: 10.8,
-    distance: 3.5,
-    rotation: Math.PI / 2, // 90°
-    y: -2.83,
+    width: 10.1,
+    height: 11.1,
+    distance: 3.6,
+    rotation: Math.PI * 2, // 360°
+    y: -1.91,
   });
-  const [cameraFov, setCameraFov] = useState<number>(20);
+  const [cameraFov, setCameraFov] = useState<number>(10);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controlsRef = useRef<any>(null);
@@ -457,35 +457,35 @@ export default function Page() {
     setIsAutoRotating(false);
     setIsRecording(false);
     setRecordingProgress(0);
-    setLabelRoughness(0.26);
+    setLabelRoughness(0.21);
     setCanSize("355ml");
     setMetalSettings({
-      top: { color: "#ffffff", brightness: 1.35, roughness: 0.48, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.40 },
-      bottom: { color: "#ffffff", brightness: 1.40, roughness: 0.46, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.50 },
+      top: { color: "#c7c7c7", brightness: 1.35, roughness: 0.48, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.40 },
+      bottom: { color: "#b8b8b8", brightness: 1.40, roughness: 0.46, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.50 },
     });
     setLightingSettings((prev) => ({
       ...prev,
-      exposure: 1.78,
-      envIntensity: 1.54,
-      ambientIntensity: 2.8,
-      fillLightIntensity: 5.0,
-      rimLightIntensity: 5.8,
-      directionalIntensity: 2.6,
-      otherRotation: (195 * Math.PI) / 180,
-      otherStrength: 1.01,
+      exposure: 1.43,
+      envIntensity: 2.32,
+      ambientIntensity: 2.7,
+      fillLightIntensity: 4.3,
+      rimLightIntensity: 5.6,
+      directionalIntensity: 4.2,
+      otherRotation: (130 * Math.PI) / 180,
+      otherStrength: 1.61,
     }));
     setBar({
       enabled: true,
       color: "#fafafa",
       intensity: 1.10,
-      width: 4.6,
-      height: 10.8,
-      distance: 3.5,
-      rotation: Math.PI / 2,
-      y: -2.83,
+      width: 10.1,
+      height: 11.1,
+      distance: 3.6,
+      rotation: Math.PI * 2,
+      y: -1.91,
     });
     controlsRef.current?.reset();
-    setCameraFov(20);
+    setCameraFov(10);
     setSelectedFlavor("none");
   };
 
