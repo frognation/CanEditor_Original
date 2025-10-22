@@ -1,7 +1,13 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Environment, useTexture, useGLTF, Lightformer } from "@react-three/drei";
+import {
+  OrbitControls,
+  Environment,
+  useTexture,
+  useGLTF,
+  Lightformer,
+} from "@react-three/drei";
 import { flavorTextures } from "@/utils/data";
 import { useState, useRef, useCallback, useEffect } from "react";
 import * as THREE from "three";
@@ -30,31 +36,31 @@ interface LightingSettings {
   rimLightPosition: [number, number, number];
   directionalIntensity: number;
   directionalPosition: [number, number, number];
-  otherRotation: number;   // 나머지 조명 회전
-  otherStrength: number;   // 나머지 조명 전체 배율
+  otherRotation: number; // 나머지 조명 회전
+  otherStrength: number; // 나머지 조명 전체 배율
 }
 
 // 바(하이라이트) 설정 타입(명시적으로 추가)
 interface BarSettings {
   enabled: boolean;
   color: string;
-  intensity: number;  // 0~20
-  width: number;      // 0.1~12
-  height: number;     // 0.1~16
-  distance: number;   // 0.5~15
-  rotation: number;   // 0~2π (바 전용 회전)
-  y: number;          // -3~3
+  intensity: number; // 0~20
+  width: number; // 0.1~12
+  height: number; // 0.1~16
+  distance: number; // 0.5~15
+  rotation: number; // 0~2π (바 전용 회전)
+  y: number; // -3~3
 }
 
 // 금속 파트 설정 추가
 interface MetalPartSettings {
   color: string;
   brightness: number; // 0.5 ~ 2.0
-  roughness: number;  // 0 ~ 1 (낮을수록 글로시)
+  roughness: number; // 0 ~ 1 (낮을수록 글로시)
   emissiveIntensity: number; // 0 ~ 2 (자체 발광으로 그림자 어두움 완화)
   castShadow: boolean;
   receiveShadow: boolean;
-  envMapIntensity: number;   // 0 ~ 4 (환경/바 반사 강도)
+  envMapIntensity: number; // 0 ~ 4 (환경/바 반사 강도)
 }
 interface MetalSettings {
   top: MetalPartSettings;
@@ -118,8 +124,10 @@ function EditableSodaCan({
   });
 
   // 원본 지오메트리
-  const metalGeo = (nodes.cylinder as THREE.Mesh).geometry as THREE.BufferGeometry;
-  const labelGeo = (nodes.cylinder_1 as THREE.Mesh).geometry as THREE.BufferGeometry;
+  const metalGeo = (nodes.cylinder as THREE.Mesh)
+    .geometry as THREE.BufferGeometry;
+  const labelGeo = (nodes.cylinder_1 as THREE.Mesh)
+    .geometry as THREE.BufferGeometry;
 
   // 라벨 바디 경계 (로컬)
   if (!labelGeo.boundingBox) labelGeo.computeBoundingBox();
@@ -133,8 +141,8 @@ function EditableSodaCan({
   const sy = canSize === "475ml" ? 3.0 / 2.5 : 1.0;
 
   // 상/하 경계 유격 제거 epsilon (로컬 단위, 475ml에서만 적용)
-  const seamTopLocal   = sy > 1 ? bodyHeight * 0.003 : 0;  // 위쪽은 소폭
-  const seamBottomLocal= sy > 1 ? bodyHeight * 0.007 : 0;  // 아래쪽은 더 크게
+  const seamTopLocal = sy > 1 ? bodyHeight * 0.003 : 0; // 위쪽은 소폭
+  const seamBottomLocal = sy > 1 ? bodyHeight * 0.007 : 0; // 아래쪽은 더 크게
 
   // 중심 기준 신장량
   const offsetCoreLocal = (bodyHeight / 2) * (sy - 1);
@@ -150,8 +158,10 @@ function EditableSodaCan({
   const seamBottomWorld = seamBottomLocal * sy * uniformScale;
 
   // 월드 기준 평면
-  const planeKeepYGreaterEq = (y: number) => new THREE.Plane(new THREE.Vector3(0, 1, 0), -y); // y >= value
-  const planeKeepYLessEq = (y: number) => new THREE.Plane(new THREE.Vector3(0, -1, 0), y);    // y <= value
+  const planeKeepYGreaterEq = (y: number) =>
+    new THREE.Plane(new THREE.Vector3(0, 1, 0), -y); // y >= value
+  const planeKeepYLessEq = (y: number) =>
+    new THREE.Plane(new THREE.Vector3(0, -1, 0), y); // y <= value
 
   // 상단/하단 보정: 바닥을 더 끌어올림
   const topPlane = planeKeepYGreaterEq(newMaxWorld - seamTopWorld);
@@ -168,7 +178,10 @@ function EditableSodaCan({
     c.multiplyScalar(b);
     return c;
   };
-  const makeMetalMat = (planes: THREE.Plane[], part: "top" | "bottom" | "body") => {
+  const makeMetalMat = (
+    planes: THREE.Plane[],
+    part: "top" | "bottom" | "body"
+  ) => {
     const cfg =
       part === "top"
         ? metalSettings.top
@@ -177,12 +190,22 @@ function EditableSodaCan({
         : {
             // 바디 금속은 상/하 평균값 적용
             color: "#bbbbbb",
-            brightness: (metalSettings.top.brightness + metalSettings.bottom.brightness) / 2,
-            roughness: (metalSettings.top.roughness + metalSettings.bottom.roughness) / 2,
-            emissiveIntensity: (metalSettings.top.emissiveIntensity + metalSettings.bottom.emissiveIntensity) / 2,
+            brightness:
+              (metalSettings.top.brightness + metalSettings.bottom.brightness) /
+              2,
+            roughness:
+              (metalSettings.top.roughness + metalSettings.bottom.roughness) /
+              2,
+            emissiveIntensity:
+              (metalSettings.top.emissiveIntensity +
+                metalSettings.bottom.emissiveIntensity) /
+              2,
             castShadow: false,
             receiveShadow: true,
-            envMapIntensity: (metalSettings.top.envMapIntensity + metalSettings.bottom.envMapIntensity) / 2,
+            envMapIntensity:
+              (metalSettings.top.envMapIntensity +
+                metalSettings.bottom.envMapIntensity) /
+              2,
           };
     return new THREE.MeshStandardMaterial({
       roughness: cfg.roughness,
@@ -201,7 +224,11 @@ function EditableSodaCan({
   const bottomMetalMat = makeMetalMat([bottomPlane], "bottom");
 
   return (
-    <group ref={groupRef} dispose={null} scale={[uniformScale, uniformScale, uniformScale]}>
+    <group
+      ref={groupRef}
+      dispose={null}
+      scale={[uniformScale, uniformScale, uniformScale]}
+    >
       {/* 상단 금속 */}
       <mesh
         castShadow={metalSettings.top.castShadow}
@@ -250,7 +277,10 @@ function EditableSodaCan({
         <meshStandardMaterial
           roughness={metalSettings.top.roughness}
           metalness={1}
-          color={colorWithBrightness(metalSettings.top.color, metalSettings.top.brightness)}
+          color={colorWithBrightness(
+            metalSettings.top.color,
+            metalSettings.top.brightness
+          )}
           emissive={"#ffffff"}
           emissiveIntensity={metalSettings.top.emissiveIntensity}
           envMapIntensity={metalSettings.top.envMapIntensity}
@@ -276,8 +306,16 @@ function CustomLighting({ settings }: { settings: LightingSettings }) {
         shadow-normalBias={0.02}
         shadow-radius={4}
       />
-      <pointLight position={settings.fillLightPosition} intensity={settings.fillLightIntensity * k} color="#ffffff" />
-      <pointLight position={settings.rimLightPosition} intensity={settings.rimLightIntensity * k} color="#ffffff" />
+      <pointLight
+        position={settings.fillLightPosition}
+        intensity={settings.fillLightIntensity * k}
+        color="#ffffff"
+      />
+      <pointLight
+        position={settings.rimLightPosition}
+        intensity={settings.rimLightIntensity * k}
+        color="#ffffff"
+      />
     </group>
   );
 }
@@ -300,7 +338,7 @@ function CameraPerspective({ fov }: { fov: number }) {
   useEffect(() => {
     const persp = camera as THREE.PerspectiveCamera;
     const baseFov = 25; // Canvas 기본 fov
-    const baseZ = 4;    // Canvas 기본 z
+    const baseZ = 4; // Canvas 기본 z
     const z =
       (baseZ * Math.tan(THREE.MathUtils.degToRad(baseFov / 2))) /
       Math.tan(THREE.MathUtils.degToRad(fov / 2));
@@ -344,7 +382,11 @@ function RotatingEnvironment({
   );
 }
 
-function CustomOrbitControls({ controlsRef }: { controlsRef: React.RefObject<any> }) {
+function CustomOrbitControls({
+  controlsRef,
+}: {
+  controlsRef: React.RefObject<any>;
+}) {
   const [isInteracting, setIsInteracting] = useState(false);
   useFrame(() => {
     if (!isInteracting && controlsRef.current) {
@@ -384,8 +426,9 @@ function CustomOrbitControls({ controlsRef }: { controlsRef: React.RefObject<any
 // }
 
 export default function Page() {
-  const [selectedFlavor, setSelectedFlavor] =
-    useState<"none" | keyof typeof flavorTextures>("none");
+  const [selectedFlavor, setSelectedFlavor] = useState<
+    "none" | keyof typeof flavorTextures
+  >("none");
   const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
   const [customImage, setCustomImage] = useState<string>("");
   const [isAutoRotating, setIsAutoRotating] = useState(false);
@@ -394,12 +437,28 @@ export default function Page() {
   const [canSize, setCanSize] = useState<CanSize>("355ml");
   const [labelRoughness, setLabelRoughness] = useState<number>(0.21);
   const [metalSettings, setMetalSettings] = useState<MetalSettings>({
-    top: { color: "#c7c7c7", brightness: 1.35, roughness: 0.48, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.40 },
-    bottom: { color: "#b8b8b8", brightness: 1.40, roughness: 0.46, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.50 },
+    top: {
+      color: "#c7c7c7",
+      brightness: 1.35,
+      roughness: 0.48,
+      emissiveIntensity: 0.01,
+      castShadow: false,
+      receiveShadow: true,
+      envMapIntensity: 1.4,
+    },
+    bottom: {
+      color: "#b8b8b8",
+      brightness: 1.4,
+      roughness: 0.46,
+      emissiveIntensity: 0.01,
+      castShadow: false,
+      receiveShadow: true,
+      envMapIntensity: 1.5,
+    },
   });
   const [lightingSettings, setLightingSettings] = useState<LightingSettings>({
     exposure: 1.43,
-    envIntensity: 2.32,                // (bar 비활성 시) HDRI 강도
+    envIntensity: 2.32, // (bar 비활성 시) HDRI 강도
     ambientIntensity: 2.7,
     fillLightIntensity: 4.3,
     fillLightPosition: [5, 0, 5],
@@ -413,7 +472,7 @@ export default function Page() {
   const [bar, setBar] = useState<BarSettings>({
     enabled: true,
     color: "#fafafa",
-    intensity: 1.10,
+    intensity: 1.1,
     width: 10.1,
     height: 11.1,
     distance: 3.6,
@@ -423,6 +482,7 @@ export default function Page() {
   const [cameraFov, setCameraFov] = useState<number>(10);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const presetInputRef = useRef<HTMLInputElement>(null);
   const controlsRef = useRef<any>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -460,8 +520,24 @@ export default function Page() {
     setLabelRoughness(0.21);
     setCanSize("355ml");
     setMetalSettings({
-      top: { color: "#c7c7c7", brightness: 1.35, roughness: 0.48, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.40 },
-      bottom: { color: "#b8b8b8", brightness: 1.40, roughness: 0.46, emissiveIntensity: 0.01, castShadow: false, receiveShadow: true, envMapIntensity: 1.50 },
+      top: {
+        color: "#c7c7c7",
+        brightness: 1.35,
+        roughness: 0.48,
+        emissiveIntensity: 0.01,
+        castShadow: false,
+        receiveShadow: true,
+        envMapIntensity: 1.4,
+      },
+      bottom: {
+        color: "#b8b8b8",
+        brightness: 1.4,
+        roughness: 0.46,
+        emissiveIntensity: 0.01,
+        castShadow: false,
+        receiveShadow: true,
+        envMapIntensity: 1.5,
+      },
     });
     setLightingSettings((prev) => ({
       ...prev,
@@ -477,7 +553,7 @@ export default function Page() {
     setBar({
       enabled: true,
       color: "#fafafa",
-      intensity: 1.10,
+      intensity: 1.1,
       width: 10.1,
       height: 11.1,
       distance: 3.6,
@@ -490,6 +566,101 @@ export default function Page() {
   };
 
   const toggleAutoRotation = () => setIsAutoRotating((v) => !v);
+
+  // --- Preset JSON (Save / Load) ---
+  type AppSettings = {
+    version: 1;
+    canSize: CanSize;
+    labelRoughness: number;
+    cameraFov: number;
+    metalSettings: MetalSettings;
+    lightingSettings: LightingSettings;
+    bar: BarSettings;
+    rotation: [number, number, number];
+    isAutoRotating: boolean;
+  };
+
+  const buildSettings = (): AppSettings => ({
+    version: 1 as const,
+    canSize,
+    labelRoughness,
+    cameraFov,
+    metalSettings,
+    lightingSettings,
+    bar,
+    rotation,
+    isAutoRotating,
+  });
+
+  const saveSettingsToJson = () => {
+    const data = buildSettings();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `can-editor-preset.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const applySettings = (s: Partial<AppSettings>) => {
+    if (s.canSize) setCanSize(s.canSize);
+    if (typeof s.labelRoughness === "number")
+      setLabelRoughness(s.labelRoughness);
+    if (typeof s.cameraFov === "number") setCameraFov(s.cameraFov);
+    if (s.rotation && Array.isArray(s.rotation) && s.rotation.length === 3) {
+      setRotation([
+        Number(s.rotation[0]),
+        Number(s.rotation[1]),
+        Number(s.rotation[2]),
+      ] as [number, number, number]);
+    }
+    if (typeof s.isAutoRotating === "boolean")
+      setIsAutoRotating(s.isAutoRotating);
+    if (s.metalSettings) {
+      setMetalSettings((prev) => ({
+        top: { ...prev.top, ...(s.metalSettings as MetalSettings).top },
+        bottom: {
+          ...prev.bottom,
+          ...(s.metalSettings as MetalSettings).bottom,
+        },
+      }));
+    }
+    if (s.lightingSettings) {
+      setLightingSettings((prev) => ({
+        ...prev,
+        ...(s.lightingSettings as LightingSettings),
+      }));
+    }
+    if (s.bar) setBar((prev) => ({ ...prev, ...(s.bar as BarSettings) }));
+  };
+
+  const onLoadPresetClick = () => presetInputRef.current?.click();
+  const onPresetFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = String(reader.result || "{}");
+        const json = JSON.parse(text);
+        if (json && (json.version === 1 || json.version === undefined)) {
+          applySettings(json);
+          alert("Preset loaded.");
+        } else {
+          alert("Unsupported preset version.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load preset: invalid JSON.");
+      } finally {
+        e.target.value = ""; // allow loading same file again
+      }
+    };
+    reader.readAsText(file);
+  };
 
   // PNG 저장: 현재 캔버스 해상도 그대로, 배경 투명
   const saveToPNG = () => {
@@ -511,7 +682,9 @@ export default function Page() {
     setRecordingProgress(0);
 
     const stream = src.captureStream(30);
-    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    const recorder = new MediaRecorder(stream, {
+      mimeType: "video/webm;codecs=vp9",
+    });
 
     const chunks: BlobPart[] = [];
     recorder.ondataavailable = (ev) => {
@@ -555,24 +728,34 @@ export default function Page() {
         <div className="w-80 bg-gray-50 p-6 shadow-lg overflow-y-auto border-r">
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Can Editor</h1>
-              <p className="text-gray-600 text-sm">Customize and rotate your soda can</p>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                Can Editor
+              </h1>
+              <p className="text-gray-600 text-sm">
+                Customize and rotate your soda can
+              </p>
             </div>
 
             {/* Can Size 선택 (상단 버튼) */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Can Size</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Can Size
+              </h3>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(canSizeSpecs) as CanSize[]).map((size) => (
                   <button
                     key={size}
                     onClick={() => setCanSize(size)}
                     className={`p-3 rounded-lg border-2 text-left transition-colors ${
-                      canSize === size ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                      canSize === size
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="font-semibold text-gray-800">{size}</div>
-                    <div className="text-xs text-gray-500 mt-1">{canSizeSpecs[size].labelSizeText}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {canSizeSpecs[size].labelSizeText}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -580,9 +763,12 @@ export default function Page() {
 
             {/* 라벨 질감 조절 */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Label Texture</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Label Texture
+              </h3>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Roughness: {labelRoughness.toFixed(2)} ({labelRoughness > 0.5 ? "Matte" : "Glossy"})
+                Roughness: {labelRoughness.toFixed(2)} (
+                {labelRoughness > 0.5 ? "Matte" : "Glossy"})
               </label>
               <input
                 type="range"
@@ -597,28 +783,37 @@ export default function Page() {
 
             {/* 금속(윗/아랫면) 설정 */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Metal (Top & Bottom)</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Metal (Top & Bottom)
+              </h3>
               {/* Top */}
               <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Top Metal</h4>
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                  Top Metal
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={metalSettings.top.color}
-                      onChange={(e) => updateMetalSetting("top", "color", e.target.value)}
+                      onChange={(e) =>
+                        updateMetalSetting("top", "color", e.target.value)
+                      }
                       className="w-10 h-7 rounded border"
                     />
                     <input
                       type="text"
                       value={metalSettings.top.color}
-                      onChange={(e) => updateMetalSetting("top", "color", e.target.value)}
+                      onChange={(e) =>
+                        updateMetalSetting("top", "color", e.target.value)
+                      }
                       className="flex-1 p-1 text-xs border rounded"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Roughness: {metalSettings.top.roughness.toFixed(2)} ({metalSettings.top.roughness > 0.5 ? "Matte" : "Glossy"})
+                      Roughness: {metalSettings.top.roughness.toFixed(2)} (
+                      {metalSettings.top.roughness > 0.5 ? "Matte" : "Glossy"})
                     </label>
                     <input
                       type="range"
@@ -626,7 +821,13 @@ export default function Page() {
                       max={1}
                       step={0.01}
                       value={metalSettings.top.roughness}
-                      onChange={(e) => updateMetalSetting("top", "roughness", parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        updateMetalSetting(
+                          "top",
+                          "roughness",
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
@@ -640,13 +841,20 @@ export default function Page() {
                       max={2}
                       step={0.05}
                       value={metalSettings.top.brightness}
-                      onChange={(e) => updateMetalSetting("top", "brightness", parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        updateMetalSetting(
+                          "top",
+                          "brightness",
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Emissive Boost: {metalSettings.top.emissiveIntensity.toFixed(2)}
+                      Emissive Boost:{" "}
+                      {metalSettings.top.emissiveIntensity.toFixed(2)}
                     </label>
                     <input
                       type="range"
@@ -654,7 +862,13 @@ export default function Page() {
                       max={2}
                       step={0.01}
                       value={metalSettings.top.emissiveIntensity}
-                      onChange={(e) => updateMetalSetting("top", "emissiveIntensity", parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        updateMetalSetting(
+                          "top",
+                          "emissiveIntensity",
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
@@ -663,7 +877,13 @@ export default function Page() {
                       <input
                         type="checkbox"
                         checked={metalSettings.top.castShadow}
-                        onChange={(e) => updateMetalSetting("top", "castShadow", e.target.checked)}
+                        onChange={(e) =>
+                          updateMetalSetting(
+                            "top",
+                            "castShadow",
+                            e.target.checked
+                          )
+                        }
                       />
                       Cast Shadow
                     </label>
@@ -671,7 +891,13 @@ export default function Page() {
                       <input
                         type="checkbox"
                         checked={metalSettings.top.receiveShadow}
-                        onChange={(e) => updateMetalSetting("top", "receiveShadow", e.target.checked)}
+                        onChange={(e) =>
+                          updateMetalSetting(
+                            "top",
+                            "receiveShadow",
+                            e.target.checked
+                          )
+                        }
                       />
                       Receive Shadow
                     </label>
@@ -681,25 +907,35 @@ export default function Page() {
 
               {/* Bottom */}
               <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Bottom Metal</h4>
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                  Bottom Metal
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={metalSettings.bottom.color}
-                      onChange={(e) => updateMetalSetting("bottom", "color", e.target.value)}
+                      onChange={(e) =>
+                        updateMetalSetting("bottom", "color", e.target.value)
+                      }
                       className="w-10 h-7 rounded border"
                     />
                     <input
                       type="text"
                       value={metalSettings.bottom.color}
-                      onChange={(e) => updateMetalSetting("bottom", "color", e.target.value)}
+                      onChange={(e) =>
+                        updateMetalSetting("bottom", "color", e.target.value)
+                      }
                       className="flex-1 p-1 text-xs border rounded"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Roughness: {metalSettings.bottom.roughness.toFixed(2)} ({metalSettings.bottom.roughness > 0.5 ? "Matte" : "Glossy"})
+                      Roughness: {metalSettings.bottom.roughness.toFixed(2)} (
+                      {metalSettings.bottom.roughness > 0.5
+                        ? "Matte"
+                        : "Glossy"}
+                      )
                     </label>
                     <input
                       type="range"
@@ -707,7 +943,13 @@ export default function Page() {
                       max={1}
                       step={0.01}
                       value={metalSettings.bottom.roughness}
-                      onChange={(e) => updateMetalSetting("bottom", "roughness", parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        updateMetalSetting(
+                          "bottom",
+                          "roughness",
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
@@ -721,13 +963,20 @@ export default function Page() {
                       max={2}
                       step={0.05}
                       value={metalSettings.bottom.brightness}
-                      onChange={(e) => updateMetalSetting("bottom", "brightness", parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        updateMetalSetting(
+                          "bottom",
+                          "brightness",
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Emissive Boost: {metalSettings.bottom.emissiveIntensity.toFixed(2)}
+                      Emissive Boost:{" "}
+                      {metalSettings.bottom.emissiveIntensity.toFixed(2)}
                     </label>
                     <input
                       type="range"
@@ -735,7 +984,13 @@ export default function Page() {
                       max={2}
                       step={0.01}
                       value={metalSettings.bottom.emissiveIntensity}
-                      onChange={(e) => updateMetalSetting("bottom", "emissiveIntensity", parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        updateMetalSetting(
+                          "bottom",
+                          "emissiveIntensity",
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
@@ -744,7 +999,13 @@ export default function Page() {
                       <input
                         type="checkbox"
                         checked={metalSettings.bottom.castShadow}
-                        onChange={(e) => updateMetalSetting("bottom", "castShadow", e.target.checked)}
+                        onChange={(e) =>
+                          updateMetalSetting(
+                            "bottom",
+                            "castShadow",
+                            e.target.checked
+                          )
+                        }
                       />
                       Cast Shadow
                     </label>
@@ -752,7 +1013,13 @@ export default function Page() {
                       <input
                         type="checkbox"
                         checked={metalSettings.bottom.receiveShadow}
-                        onChange={(e) => updateMetalSetting("bottom", "receiveShadow", e.target.checked)}
+                        onChange={(e) =>
+                          updateMetalSetting(
+                            "bottom",
+                            "receiveShadow",
+                            e.target.checked
+                          )
+                        }
                       />
                       Receive Shadow
                     </label>
@@ -763,13 +1030,44 @@ export default function Page() {
 
             {/* Controls Section */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Controls</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Controls
+              </h3>
               <div className="space-y-3">
+                {/* Presets */}
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                    Presets
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={saveSettingsToJson}
+                      className="px-3 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded"
+                    >
+                      Save JSON
+                    </button>
+                    <button
+                      onClick={onLoadPresetClick}
+                      className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      Load JSON
+                    </button>
+                  </div>
+                  <input
+                    ref={presetInputRef}
+                    type="file"
+                    accept="application/json"
+                    onChange={onPresetFileSelected}
+                    className="hidden"
+                  />
+                </div>
                 <button
                   onClick={toggleAutoRotation}
                   disabled={isRecording}
                   className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                    isAutoRotating ? "bg-red-500 hover:bg-red-600 text-white" : "bg-green-500 hover:bg-green-600 text-white"
+                    isAutoRotating
+                      ? "bg-red-500 hover:bg-red-600 text-white"
+                      : "bg-green-500 hover:bg-green-600 text-white"
                   } ${isRecording ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isAutoRotating ? "Stop Rotation" : "Start Rotation"}
@@ -792,27 +1090,37 @@ export default function Page() {
                     isRecording ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  {isRecording ? `Recording... ${Math.round(recordingProgress)}%` : "Record 360° Video"}
+                  {isRecording
+                    ? `Recording... ${Math.round(recordingProgress)}%`
+                    : "Record 360° Video"}
                 </button>
               </div>
             </div>
 
             {/* Lighting Settings */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Lighting Settings</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Lighting Settings
+              </h3>
               <div className="space-y-4">
                 {/* 전체 노출 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Overall Brightness (Exposure): {lightingSettings.exposure.toFixed(2)}
+                    Overall Brightness (Exposure):{" "}
+                    {lightingSettings.exposure.toFixed(2)}
                   </label>
                   <input
                     type="range"
                     min={0}
-                    max={4}          // ↑ 범위 확장
+                    max={4} // ↑ 범위 확장
                     step={0.01}
                     value={lightingSettings.exposure}
-                    onChange={(e) => setLightingSettings((p) => ({ ...p, exposure: parseFloat(e.target.value) }))}
+                    onChange={(e) =>
+                      setLightingSettings((p) => ({
+                        ...p,
+                        exposure: parseFloat(e.target.value),
+                      }))
+                    }
                     className="w-full"
                   />
                 </div>
@@ -820,12 +1128,16 @@ export default function Page() {
                 {/* 바 조명 */}
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-800">Bar Light</span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      Bar Light
+                    </span>
                     <label className="text-sm flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={bar.enabled}
-                        onChange={(e) => setBar((p) => ({ ...p, enabled: e.target.checked }))}
+                        onChange={(e) =>
+                          setBar((p) => ({ ...p, enabled: e.target.checked }))
+                        }
                       />
                       Enable
                     </label>
@@ -835,33 +1147,45 @@ export default function Page() {
                       <input
                         type="color"
                         value={bar.color}
-                        onChange={(e) => setBar((p) => ({ ...p, color: e.target.value }))}
+                        onChange={(e) =>
+                          setBar((p) => ({ ...p, color: e.target.value }))
+                        }
                         className="w-10 h-7 rounded border"
                       />
                       <input
                         type="text"
                         value={bar.color}
-                        onChange={(e) => setBar((p) => ({ ...p, color: e.target.value }))}
+                        onChange={(e) =>
+                          setBar((p) => ({ ...p, color: e.target.value }))
+                        }
                         className="flex-1 p-1 text-xs border rounded"
                       />
                     </div>
 
                     <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Intensity: {bar.intensity.toFixed(2)}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Intensity: {bar.intensity.toFixed(2)}
+                      </label>
                       <input
                         type="range"
                         min={0}
-                        max={20}      // ↑ 범위 확장
+                        max={20} // ↑ 범위 확장
                         step={0.05}
                         value={bar.intensity}
-                        onChange={(e) => setBar((p) => ({ ...p, intensity: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setBar((p) => ({
+                            ...p,
+                            intensity: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
 
                     <div className="col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Bar Rotation: {Math.round((bar.rotation * 180) / Math.PI)}°
+                        Bar Rotation:{" "}
+                        {Math.round((bar.rotation * 180) / Math.PI)}°
                       </label>
                       <input
                         type="range"
@@ -869,59 +1193,92 @@ export default function Page() {
                         max={Math.PI * 2}
                         step={0.01}
                         value={bar.rotation}
-                        onChange={(e) => setBar((p) => ({ ...p, rotation: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setBar((p) => ({
+                            ...p,
+                            rotation: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Height (Y): {bar.y.toFixed(2)}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Height (Y): {bar.y.toFixed(2)}
+                      </label>
                       <input
                         type="range"
                         min={-3}
                         max={3}
                         step={0.01}
                         value={bar.y}
-                        onChange={(e) => setBar((p) => ({ ...p, y: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setBar((p) => ({
+                            ...p,
+                            y: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Distance: {bar.distance.toFixed(1)}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Distance: {bar.distance.toFixed(1)}
+                      </label>
                       <input
                         type="range"
                         min={0.5}
-                        max={15}     // ↑ 범위 확장
+                        max={15} // ↑ 범위 확장
                         step={0.1}
                         value={bar.distance}
-                        onChange={(e) => setBar((p) => ({ ...p, distance: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setBar((p) => ({
+                            ...p,
+                            distance: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Width: {bar.width.toFixed(1)}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Width: {bar.width.toFixed(1)}
+                      </label>
                       <input
                         type="range"
                         min={0.1}
-                        max={12}      // ↑ 범위 확장
+                        max={12} // ↑ 범위 확장
                         step={0.1}
                         value={bar.width}
-                        onChange={(e) => setBar((p) => ({ ...p, width: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setBar((p) => ({
+                            ...p,
+                            width: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Height: {bar.height.toFixed(1)}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Height: {bar.height.toFixed(1)}
+                      </label>
                       <input
                         type="range"
                         min={0.1}
-                        max={16}      // ↑ 범위 확장
+                        max={16} // ↑ 범위 확장
                         step={0.1}
                         value={bar.height}
-                        onChange={(e) => setBar((p) => ({ ...p, height: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setBar((p) => ({
+                            ...p,
+                            height: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
@@ -930,26 +1287,38 @@ export default function Page() {
 
                 {/* 나머지 조명 */}
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm font-semibold text-gray-800 mb-2">Other Lights</div>
+                  <div className="text-sm font-semibold text-gray-800 mb-2">
+                    Other Lights
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Other Lights Strength: {lightingSettings.otherStrength.toFixed(2)}×
+                      Other Lights Strength:{" "}
+                      {lightingSettings.otherStrength.toFixed(2)}×
                     </label>
                     <input
                       type="range"
                       min={0}
-                      max={3}       // ↑ 범위 확장
+                      max={3} // ↑ 범위 확장
                       step={0.01}
                       value={lightingSettings.otherStrength}
-                      onChange={(e) => setLightingSettings((p) => ({ ...p, otherStrength: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setLightingSettings((p) => ({
+                          ...p,
+                          otherStrength: parseFloat(e.target.value),
+                        }))
+                      }
                       className="w-full"
                     />
                   </div>
 
                   <div className="mt-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Other Lights Rotation: {Math.round((lightingSettings.otherRotation * 180) / Math.PI)}°
+                      Other Lights Rotation:{" "}
+                      {Math.round(
+                        (lightingSettings.otherRotation * 180) / Math.PI
+                      )}
+                      °
                     </label>
                     <input
                       type="range"
@@ -957,7 +1326,12 @@ export default function Page() {
                       max={Math.PI * 2}
                       step={0.01}
                       value={lightingSettings.otherRotation}
-                      onChange={(e) => setLightingSettings((p) => ({ ...p, otherRotation: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setLightingSettings((p) => ({
+                          ...p,
+                          otherRotation: parseFloat(e.target.value),
+                        }))
+                      }
                       className="w-full"
                     />
                   </div>
@@ -970,10 +1344,15 @@ export default function Page() {
                       <input
                         type="range"
                         min={0}
-                        max={10}     // ↑ 범위 확장
+                        max={10} // ↑ 범위 확장
                         step={0.1}
                         value={lightingSettings.ambientIntensity}
-                        onChange={(e) => setLightingSettings((p) => ({ ...p, ambientIntensity: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setLightingSettings((p) => ({
+                            ...p,
+                            ambientIntensity: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
@@ -985,10 +1364,15 @@ export default function Page() {
                       <input
                         type="range"
                         min={0}
-                        max={10}     // ↑ 범위 확장
+                        max={10} // ↑ 범위 확장
                         step={0.1}
                         value={lightingSettings.fillLightIntensity}
-                        onChange={(e) => setLightingSettings((p) => ({ ...p, fillLightIntensity: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setLightingSettings((p) => ({
+                            ...p,
+                            fillLightIntensity: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
@@ -1000,25 +1384,36 @@ export default function Page() {
                       <input
                         type="range"
                         min={0}
-                        max={10}     // ↑ 범위 확장
+                        max={10} // ↑ 범위 확장
                         step={0.1}
                         value={lightingSettings.rimLightIntensity}
-                        onChange={(e) => setLightingSettings((p) => ({ ...p, rimLightIntensity: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setLightingSettings((p) => ({
+                            ...p,
+                            rimLightIntensity: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Directional: {lightingSettings.directionalIntensity.toFixed(1)}
+                        Directional:{" "}
+                        {lightingSettings.directionalIntensity.toFixed(1)}
                       </label>
                       <input
                         type="range"
                         min={0}
-                        max={10}     // ↑ 범위 확장
+                        max={10} // ↑ 범위 확장
                         step={0.1}
                         value={lightingSettings.directionalIntensity}
-                        onChange={(e) => setLightingSettings((p) => ({ ...p, directionalIntensity: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setLightingSettings((p) => ({
+                            ...p,
+                            directionalIntensity: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
@@ -1026,15 +1421,21 @@ export default function Page() {
                     {/* (bar 미사용시) HDRI 강도 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Base Environment Intensity (when Bar disabled): {lightingSettings.envIntensity.toFixed(2)}
+                        Base Environment Intensity (when Bar disabled):{" "}
+                        {lightingSettings.envIntensity.toFixed(2)}
                       </label>
                       <input
                         type="range"
                         min={0}
-                        max={4}      // ↑ 범위 확장
+                        max={4} // ↑ 범위 확장
                         step={0.01}
                         value={lightingSettings.envIntensity}
-                        onChange={(e) => setLightingSettings((p) => ({ ...p, envIntensity: parseFloat(e.target.value) }))}
+                        onChange={(e) =>
+                          setLightingSettings((p) => ({
+                            ...p,
+                            envIntensity: parseFloat(e.target.value),
+                          }))
+                        }
                         className="w-full"
                       />
                     </div>
@@ -1043,7 +1444,9 @@ export default function Page() {
 
                 {/* 방향광 위치 입력은 유지 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Light Angle (Base Position)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Light Angle (Base Position)
+                  </label>
                   <div className="grid grid-cols-3 gap-2">
                     <input
                       type="number"
@@ -1095,7 +1498,9 @@ export default function Page() {
 
                 {/* Camera / Perspective */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-800">Camera / Perspective</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    Camera / Perspective
+                  </h3>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Perspective (FOV): {Math.round(cameraFov)}°
                   </label>
@@ -1114,7 +1519,9 @@ export default function Page() {
 
             {/* 이미지 업로드 */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">Custom Image</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Custom Image
+              </h3>
               <div className="space-y-3">
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -1122,13 +1529,23 @@ export default function Page() {
                 >
                   <div className="text-center">
                     <div className="text-gray-600">Click to upload image</div>
-                    <div className="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB</div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      PNG, JPG up to 10MB
+                    </div>
                   </div>
                 </button>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
                 {customImage && (
                   <div className="p-2 bg-green-50 border border-green-200 rounded">
-                    <div className="text-sm text-green-700">✓ Custom image loaded</div>
+                    <div className="text-sm text-green-700">
+                      ✓ Custom image loaded
+                    </div>
                   </div>
                 )}
               </div>
@@ -1137,11 +1554,14 @@ export default function Page() {
             {/* 수동 회전 */}
             {!isAutoRotating && !isRecording && (
               <div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-800">Manual Rotation</h3>
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                  Manual Rotation
+                </h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Y-axis (Horizontal): {Math.round((rotation[1] * 180) / Math.PI)}°
+                      Y-axis (Horizontal):{" "}
+                      {Math.round((rotation[1] * 180) / Math.PI)}°
                     </label>
                     <input
                       type="range"
@@ -1149,13 +1569,20 @@ export default function Page() {
                       max={Math.PI * 2}
                       step={0.1}
                       value={rotation[1]}
-                      onChange={(e) => setRotation([rotation[0], parseFloat(e.target.value), rotation[2]])}
+                      onChange={(e) =>
+                        setRotation([
+                          rotation[0],
+                          parseFloat(e.target.value),
+                          rotation[2],
+                        ])
+                      }
                       className="w-full"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      X-axis (Vertical): {Math.round((rotation[0] * 180) / Math.PI)}°
+                      X-axis (Vertical):{" "}
+                      {Math.round((rotation[0] * 180) / Math.PI)}°
                     </label>
                     <input
                       type="range"
@@ -1163,13 +1590,20 @@ export default function Page() {
                       max={Math.PI / 2}
                       step={0.1}
                       value={rotation[0]}
-                      onChange={(e) => setRotation([parseFloat(e.target.value), rotation[1], rotation[2]])}
+                      onChange={(e) =>
+                        setRotation([
+                          parseFloat(e.target.value),
+                          rotation[1],
+                          rotation[2],
+                        ])
+                      }
                       className="w-full"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Z-axis (Roll): {Math.round((rotation[2] * 180) / Math.PI)}°
+                      Z-axis (Roll): {Math.round((rotation[2] * 180) / Math.PI)}
+                      °
                     </label>
                     <input
                       type="range"
@@ -1177,7 +1611,13 @@ export default function Page() {
                       max={Math.PI}
                       step={0.1}
                       value={rotation[2]}
-                      onChange={(e) => setRotation([rotation[0], rotation[1], parseFloat(e.target.value)])}
+                      onChange={(e) =>
+                        setRotation([
+                          rotation[0],
+                          rotation[1],
+                          parseFloat(e.target.value),
+                        ])
+                      }
                       className="w-full"
                     />
                   </div>
@@ -1185,7 +1625,10 @@ export default function Page() {
               </div>
             )}
 
-            <button onClick={resetToDefault} className="w-full p-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+            <button
+              onClick={resetToDefault}
+              className="w-full p-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
               Reset to Default
             </button>
           </div>
@@ -1197,7 +1640,11 @@ export default function Page() {
             shadows
             className="bg-transparent"
             style={{ background: "transparent" }}
-            gl={{ preserveDrawingBuffer: true, alpha: true, localClippingEnabled: true }}
+            gl={{
+              preserveDrawingBuffer: true,
+              alpha: true,
+              localClippingEnabled: true,
+            }}
           >
             <SceneExposure exposure={lightingSettings.exposure} />
             <CameraPerspective fov={cameraFov} />
@@ -1206,12 +1653,15 @@ export default function Page() {
               /* 적용할 라벨 텍스처 계산 */
               (() => {
                 const selectedTexture =
-                  selectedFlavor === "none" ? undefined : flavorTextures[selectedFlavor];
+                  selectedFlavor === "none"
+                    ? undefined
+                    : flavorTextures[selectedFlavor];
                 const defaultBySize =
                   canSize === "475ml"
                     ? `${BASE}/labels/475d.png`
                     : `${BASE}/labels/355d.png`;
-                const appliedTexture = customImage || selectedTexture || defaultBySize;
+                const appliedTexture =
+                  customImage || selectedTexture || defaultBySize;
                 return (
                   <EditableSodaCan
                     customTexture={appliedTexture}
@@ -1224,7 +1674,8 @@ export default function Page() {
                     metalSettings={metalSettings}
                   />
                 );
-              })()}
+              })()
+            }
             <CustomOrbitControls controlsRef={controlsRef} />
             <RotatingEnvironment
               barRotation={bar.rotation}

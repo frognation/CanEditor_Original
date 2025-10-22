@@ -3,6 +3,7 @@
 Local dev: npm install && npm run dev, then open http://localhost:3000
 
 ## Default Settings
+
 The initial defaults for lighting, bar highlight, camera FOV, label roughness, and metal colors live in `src/app/page.tsx`.
 
 - Label roughness: `0.21`
@@ -16,3 +17,52 @@ The initial defaults for lighting, bar highlight, camera FOV, label roughness, a
 "Reset to Default" uses the same values.
 
 To change these later, edit the corresponding `useState` initializers and the `resetToDefault` function in `src/app/page.tsx`.
+
+## Presets (JSON)
+
+You can now save and load presets.
+
+- Buttons: sidebar → Controls → Presets → Save JSON / Load JSON
+- A file named `can-editor-preset.json` will be downloaded for saves.
+
+### JSON schema
+
+```
+{
+  "version": 1,
+  "canSize": "355ml" | "475ml",
+  "labelRoughness": 0.21,
+  "cameraFov": 10,
+  "metalSettings": {
+    "top": { "color": "#c7c7c7", "brightness": 1.35, "roughness": 0.48, "emissiveIntensity": 0.01, "castShadow": false, "receiveShadow": true, "envMapIntensity": 1.4 },
+    "bottom": { "color": "#b8b8b8", "brightness": 1.40, "roughness": 0.46, "emissiveIntensity": 0.01, "castShadow": false, "receiveShadow": true, "envMapIntensity": 1.5 }
+  },
+  "lightingSettings": {
+    "exposure": 1.43,
+    "envIntensity": 2.32,
+    "ambientIntensity": 2.7,
+    "fillLightIntensity": 4.3,
+    "fillLightPosition": [5, 0, 5],
+    "rimLightIntensity": 5.6,
+    "rimLightPosition": [-5, 0, 5],
+    "directionalIntensity": 4.2,
+    "directionalPosition": [1000, 500, 500],
+    "otherRotation": 2.2689280275926285,
+    "otherStrength": 1.61
+  },
+  "bar": {
+    "enabled": true,
+    "color": "#fafafa",
+    "intensity": 1.1,
+    "width": 10.1,
+    "height": 11.1,
+    "distance": 3.6,
+    "rotation": 6.283185307179586,
+    "y": -1.91
+  },
+  "rotation": [0, 0, 0],
+  "isAutoRotating": false
+}
+```
+
+Unknown fields are ignored. Missing fields keep their current values.
