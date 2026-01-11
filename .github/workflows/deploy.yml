@@ -18,20 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - run: npm ci
-      - name: Build (static export)
-        run: npm run build
-        env:
-          GITHUB_PAGES: "true"
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          NEXT_PUBLIC_BASE_PATH: "/${{ github.event.repository.name }}"
-      - name: Upload artifact
+      - name: Upload redirect site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./docs
   deploy:
     needs: build
     runs-on: ubuntu-latest

@@ -2,6 +2,29 @@
 
 Local dev: npm install && npm run dev, then open http://localhost:3000
 
+## Publishing (Vercel + GitHub Pages redirect)
+
+### What happens when you push
+
+- Pushing to `main` updates the code on GitHub.
+- If this repo is connected to Vercel, Vercel will build/deploy automatically on push.
+- GitHub Pages for this repo is configured as a simple redirect site that forwards visitors to the Vercel URL.
+
+### Redirect target
+
+- Vercel URL: https://can-editor-original.vercel.app/
+
+If you ever change the Vercel domain, update it in:
+
+- `docs/index.html`
+- `docs/404.html`
+
+Then commit + push. GitHub Pages will start redirecting to the new URL after the Pages workflow finishes.
+
+### GitHub user homepage “Live” link
+
+If your `frognation.github.io` project list links to this repo’s Pages URL (e.g. `https://frognation.github.io/CanEditor_Original/`), it will redirect to Vercel automatically.
+
 ## Default Settings
 
 The initial defaults for lighting, bar highlight, camera FOV, label roughness, and metal colors live in `src/app/page.tsx`.
